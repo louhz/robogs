@@ -1,0 +1,4 @@
+# ninja log v5
+0	6633	1749875865438516967	/home/louhz/robogs/submodules/simple-knn/build/temp.linux-x86_64-cpython-310/simple_knn.o	bff4bf3c45948bbb
+0	9423	1749875868227665368	/home/louhz/robogs/submodules/simple-knn/build/temp.linux-x86_64-cpython-310/ext.o	a59cc3e68a4034e0
+0	26062	1749875884860554447	/home/louhz/robogs/submodules/simple-knn/build/temp.linux-x86_64-cpython-310/spatial.o	d14e601de8336687

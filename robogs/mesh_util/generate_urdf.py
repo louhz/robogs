@@ -1,0 +1,1 @@
+# generate mjcf from the base script, change the name, 6dof pose, mdh and so on 

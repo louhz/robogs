@@ -1,0 +1,4 @@
+# ninja log v5
+2	7617	1736724379723817997	/home/haozhe/Desktop/2d-gaussian-splatting-great-again/submodules/Propagation/build/temp.linux-x86_64-cpython-38/pro.o	7716ed2fd95ff1f5
+0	8561	1736724380670813186	/home/haozhe/Desktop/2d-gaussian-splatting-great-again/submodules/Propagation/build/temp.linux-x86_64-cpython-38/PatchMatch.o	101e9c0972ae22cf
+1	26361	1736724398470722199	/home/haozhe/Desktop/2d-gaussian-splatting-great-again/submodules/Propagation/build/temp.linux-x86_64-cpython-38/Propagation.o	39e38ebeea8f706f

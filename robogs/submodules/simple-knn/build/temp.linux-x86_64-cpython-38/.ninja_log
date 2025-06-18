@@ -1,0 +1,4 @@
+# ninja log v5
+0	5066	1736724323457098163	/home/haozhe/Desktop/2d-gaussian-splatting-great-again/submodules/simple-knn/build/temp.linux-x86_64-cpython-38/simple_knn.o	68f55a2a483c5d4d
+0	7305	1736724325696087237	/home/haozhe/Desktop/2d-gaussian-splatting-great-again/submodules/simple-knn/build/temp.linux-x86_64-cpython-38/ext.o	c864014e5f7ace0d
+1	22723	1736724341113011491	/home/haozhe/Desktop/2d-gaussian-splatting-great-again/submodules/simple-knn/build/temp.linux-x86_64-cpython-38/spatial.o	87cdcb859a9be683

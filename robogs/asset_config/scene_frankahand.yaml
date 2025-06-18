@@ -1,0 +1,19 @@
+# franka with hand config'
+
+
+
+# render backend
+
+
+# kinematic backend
+
+# folder path
+
+
+# data path
+
+
+
+hand_type: allegro
+
+arm_type: franka

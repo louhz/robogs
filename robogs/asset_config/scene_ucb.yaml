@@ -1,0 +1,50 @@
+# gripper franka arm, single part
+
+
+
+# included parameter:
+
+
+gripper_type: robotiq 2f-85 
+
+arm_type: franka
+
+file_path:
+
+
+debug_file_savepath:
+
+worldscale
+
+class_ids
+
+class_name
+
+
+body_names
+
+recenter_list
+
+inv_joint_value
+
+joint_control_action
+
+background_id
+
+
+active_id
+
+
+
+
+finger_id1
+
+
+finger_id2
+
+
+finger_id3
+
+
+
+object_ids

@@ -1,0 +1,38 @@
+numpy==1.26.4
+opencv_python==4.10.0.84
+pyyaml
+matplotlib
+scipy==1.13.0
+scikit-sparse==0.4.15
+tqdm==4.66.5
+pyceres==2.3
+kornia==0.8.0
+faiss-cpu
+
+# for visualization and 3dgs training
+viser==0.2.11
+imageio-ffmpeg
+torchmetrics[image]
+tensorly
+nerfview
+tensorboard
+scikit-learn
+git+https://github.com/rmbrualla/pycolmap@cc7ea4b7301720ac29287dbe450952511b32125e
+git+https://github.com/nerfstudio-project/gsplat.git@ec3e715f5733df90d804843c7246e725582df10c
+git+https://github.com/rahul-goel/fused-ssim@1272e21a282342e89537159e4bad508b19b34157
+
+# for demo
+gradio
+open3d
+trimesh
+# pycolmap
+
+pypose
+submodules/Propagation 
+submodules/diff-surfel-rasterization
+submodules/simple-knn
+
+dm_control
+mediapy
+splines
+natsort

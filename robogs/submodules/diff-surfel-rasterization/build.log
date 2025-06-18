@@ -1,0 +1,4 @@
+  File "setup.py", line 31
+    extra_compile_args={"nvcc": '-G', '-lineinfo', '-Xcompiler', '-Wall', "-I" + os.path.join(os.path.dirname(os.path.abspath(__file__)), "third_party/glm/")]})
+                                                 ^
+SyntaxError: invalid syntax
