@@ -55,7 +55,7 @@ from gsplat.optimizers import SelectiveAdam
 
 
 
-from arm_deform import deform_arm,deform_finger,deform_object,deform_scene_combined,deform_arm_only,deform_finger_only
+from robogs.engine.mdh.arm_deform import deform_arm,deform_finger,deform_object,deform_scene_combined,deform_arm_only,deform_finger_only
 
 
 

@@ -14,37 +14,37 @@ file_path:
 
 debug_file_savepath:
 
-worldscale
+worldscale:
 
-class_ids
+class_ids:
 
-class_name
-
-
-body_names
-
-recenter_list
-
-inv_joint_value
-
-joint_control_action
-
-background_id
+class_name:
 
 
-active_id
+body_names:
+
+recenter_list:
+
+inv_joint_value:
+
+joint_control_action:
+
+background_id:
 
 
-
-
-finger_id1
-
-
-finger_id2
-
-
-finger_id3
+active_id:
 
 
 
-object_ids
+
+finger_id1:
+
+
+finger_id2:
+
+
+finger_id3:
+
+
+
+object_ids:
