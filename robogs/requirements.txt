@@ -36,3 +36,6 @@ dm_control
 mediapy
 splines
 natsort
+mujoco
+mujoco-mjx
+plyfile
