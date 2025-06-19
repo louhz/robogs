@@ -14,13 +14,76 @@ Please install the latest torch version that is compatible with your device, we 
 Then cd in to robogs and follow the detail installation instruction
 
 
-## Example Data
+# running command
 
+The key running command are stored in the launch.json, please run it with the vscode debugger
 
+You just need to replace the parent folder of your data 
 
+## Example Data Format
+
+run the Python Debugger: 4drender
+
+to view the 4d render result
+And change the camera view or the time frame, control signal to see the editing effect.
 
 ## Old version repo
+This old version is build upon gsplat 0.7 and old version nerfstudio,
+if you want to view the result of the demo shows in the paper, please look into this
+https://github.com/RoboOmniSim/Robostudio/tree/main
+
+
 
 
 # Create your own digital Asset
 
+step 1: a monocular 360 video
+
+Data Folder : ${datasetfolder}
+
+step 2: run struture from motion obtain features and camera pose
+
+running colmap given the video : https://colmap.github.io/install.html
+
+step 3: run gsplat_trainer
+
+Python Debugger: gsplat_trainer
+
+step 4: run stable normal and save normal images to the normals folder
+
+input the extracted images and pass it to stablenormal: https://huggingface.co/spaces/Stable-X/StableNormal
+
+step 5: extract Guassian Splat, view and edit it in the supersplat viewer: https://superspl.at/editor/
+Python Debugger: export ply
+
+step 6: extract mesh
+Python Debugger: trainmesh
+Python Debugger: extractmesh
+
+step 7: align the scene
+
+please seen this demonstration video
+
+step 8: Semantic label it or crop by manual 
+
+please seen this demonstration video
+
+step 9: assign id
+
+edit the class id and run robogs/assign.py
+
+step 10: fix the hyperparameter like mdh or phyiscal property
+
+please seen : Python Debugger: debug and this demo video
+
+
+step 11: produce urdf(mjcf)
+
+clean up the bottom of object mesh
+
+load it to the scene urdf(mjcf)
+
+step 12: simulation and render
+
+
+Python Debugger: 4drender

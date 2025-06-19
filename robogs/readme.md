@@ -7,11 +7,7 @@ Please follow the instruction and generate the digital asset, merge it with the 
 
 pip install -r requirement.txt
 
-this will install all the real2sim necessary information
-
-please also run structure from motion (colmap or glomap)
-
-and stablenormal seperately from the original repo
+this will install all the real2sim necessary information other than stablenormal and colmap
 
 
 
