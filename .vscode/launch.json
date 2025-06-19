@@ -3,9 +3,9 @@
     "configurations": [
         {
             "name": "Python Debugger: gsplat_trainer",
-            "type": "debugpy", // or "python" depending on your setup
+            "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/vis/gsplat_trainer.py", // Adjust if needed
+            "program": "${workspaceFolder}/robogs/vis/gsplat_trainer.py", 
             "args": [
                 "default",
                 "--data_dir",
@@ -21,11 +21,10 @@
         },
         {
             "name": "Python Debugger: export ply",
-            "type": "debugpy", // or "python" depending on your VS Code setup
+            "type": "debugpy", 
             "request": "launch",
-            // Update the path to your script if it's not in the root of your workspace
-            "program": "${workspaceFolder}/vis/extract_ply.py",
-            // Specify the arguments as a list
+            "program": "${workspaceFolder}/robogs/vis/extract_ply.py",
+
             "args": [
                 "default",
                 "--ckpt",
@@ -41,9 +40,9 @@
         },
         {
             "name": "Python Debugger: deform",
-            "type": "debugpy", // or "python" depending on your setup
+            "type": "debugpy", 
             "request": "launch",
-            "program": "${workspaceFolder}/deform_mujoco.py", // Adjust if needed
+            "program": "${workspaceFolder}/robogs/deform_mujoco.py", 
             "args": [
                 "default",
                 "--data_dir",
@@ -59,9 +58,9 @@
         },
                 {
             "name": "Python Debugger: debug",
-            "type": "debugpy", // or "python" depending on your setup
+            "type": "debugpy", 
             "request": "launch",
-            "program": "${workspaceFolder}/debug.py", // Adjust if needed
+            "program": "${workspaceFolder}/robogs/debug.py", 
             "args": [
                 "default",
                 "--data_dir",
@@ -79,7 +78,7 @@
             "name": "Python Debugger: trainmesh",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/meshrecon/train.py",
+            "program": "${workspaceFolder}/robogs/meshrecon/train.py",
             "args": [
                 "-s", "/home/louhz/Desktop/ucb",
                 "-r", "2",
@@ -96,9 +95,9 @@
 
         {
             "name": "Python Debugger: extractmesh",
-            "type": "debugpy", // or "python" depending on your setup
+            "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/meshrecon/render.py", // Adjust if needed
+            "program": "${workspaceFolder}/robogs/meshrecon/render.py", 
             "args": [
                 "-s", "/home/louhz/Desktop/ucb",
                 "-m", "/home/louhz/Desktop/ucbresult",
@@ -109,9 +108,9 @@
 
         {
             "name": "Python Debugger: 4drender",
-            "type": "debugpy", // or "python" depending on your setup
+            "type": "debugpy", 
             "request": "launch",
-            "program": "${workspaceFolder}/4drender.py", // Adjust if needed
+            "program": "${workspaceFolder}/robogs/4drender.py",
             "args": [
                 "default",
                 "--data_dir",

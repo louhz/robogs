@@ -15,6 +15,15 @@ and stablenormal seperately from the original repo
 
 
 
+
+# Reconstructed Asset:
+
+
+Take a 360 surrended video, and run the Gaussian Splat and Mesh Extraction to obtain the Digital Asset
+
+spray/spray/results/train/ours_7000/spray.ply is the final cleaned result
+
+
 # todo
 
 fix the config and the dataloader structure
@@ -23,3 +32,6 @@ fix the config and the dataloader structure
 fix the gripper 
 
 fix object with mujoco backend
+
+
+

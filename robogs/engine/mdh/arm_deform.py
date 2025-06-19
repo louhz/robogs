@@ -18,7 +18,7 @@ workspace_dir = os.path.dirname(current_file_dir)
 
 sys.path.append(workspace_dir)
 
-from mdh import calculate_franka_mdh_pre_frame,inverse_affine_transformation_torch
+from robogs.engine.mdh.mdh import calculate_franka_mdh_pre_frame,inverse_affine_transformation_torch
 import mujoco.viewer as mv
 import mujoco
 import json
