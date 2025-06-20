@@ -9,7 +9,7 @@ pip install -r requirement.txt
 
 this will install all the real2sim necessary information other than stablenormal and colmap
 
-
+Please also make sure ffmpeg is installed in your system by: sudo apt install ffmpeg
 
 
 # Reconstructed Asset:

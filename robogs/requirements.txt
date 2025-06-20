@@ -39,3 +39,4 @@ natsort
 mujoco
 mujoco-mjx
 plyfile
+rawpy

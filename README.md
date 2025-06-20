@@ -4,7 +4,7 @@
 
 We current support structure from motion toolset colmap and glomap, please follow the offical repo for installation and running instruction
 
-this repo contains information necessary for asset creation and 
+this repo contains information necessary for asset creation and 4d rendering
 
 
 # Installation 
@@ -19,6 +19,8 @@ Then cd in to robogs and follow the detail installation instruction
 The key running command are stored in the launch.json, please run it with the vscode debugger
 
 You just need to replace the parent folder of your data 
+
+You can look into either the sample_data(franka arm+gripper+object)or the demo data(franka arm+allegro hand+object) 
 
 ## Example Data Format
 
@@ -39,11 +41,13 @@ https://github.com/RoboOmniSim/Robostudio/tree/main
 
 step 1: a monocular 360 video
 
-Data Folder : ${datasetfolder}
+Data Folder : ${datasetfolder} = sample_data
+
+python robogs/vis/video2image.py -v sample_data/<video_path> -o sample_data/<image_output_directory> --num-frames <frame_count>
 
 step 2: run struture from motion obtain features and camera pose
 
-running colmap given the video : https://colmap.github.io/install.html
+running colmap given the extracted images : https://colmap.github.io/install.html
 
 step 3: run gsplat_trainer
 
@@ -57,6 +61,8 @@ step 5: extract Guassian Splat, view and edit it in the supersplat viewer: https
 Python Debugger: export ply
 
 step 6: extract mesh
+
+run the command in the launch.json
 Python Debugger: trainmesh
 Python Debugger: extractmesh
 
@@ -81,7 +87,11 @@ step 11: produce urdf(mjcf)
 
 clean up the bottom of object mesh
 
+python robogs/mesh_util/fixbot.py -i input_mesh.stl -o output_mesh.stl
+
 load it to the scene urdf(mjcf)
+
+
 
 step 12: simulation and render
 
