@@ -43,7 +43,9 @@ https://github.com/RoboOmniSim/Robostudio/tree/main
 
 ##  step 1: a monocular 360 video
 
-example video: https://drive.google.com/drive/folders/1dCbJDBsMVjn15Ka24NKPwzptnwVoCqYI?usp=sharing
+sample_data: https://drive.google.com/drive/folders/1dCbJDBsMVjn15Ka24NKPwzptnwVoCqYI?usp=sharing
+
+demo_data: https://drive.google.com/file/d/1hMgGnJQXrdtUnP0CDaNcqFa15qR-hLnm/view?usp=sharing
 
 Data Folder : ${datasetfolder} = sample_data
 ```shell
@@ -138,9 +140,11 @@ python robogs/mesh_util/fixbot.py -i input_mesh.stl -o output_mesh.stl
   * Compute bounding boxes and center of mass.
   * Infer physics parameters (VLM).
 
+The sample mjcf are stored in the franka_leap and franka_robotiq
 ## Step 12: Simulation and Rendering
 
 * Load URDF/MJCF for simulation:
+
 
 ```
 Python Debugger: 4drender
