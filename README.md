@@ -28,8 +28,13 @@ You can look into either the sample_data(franka arm+gripper+object)or the demo d
 
 run the Python Debugger: 4drender
 
-to view the 4d render result
-And change the camera view or the time frame, control signal to see the editing effect.
+please download this folder for the digital asset we create: https://www.dropbox.com/scl/fo/3rg66l348iyureo8amcen/AFm3SptGyT93fyFaXQghz-g?rlkey=ex134hgtuzzpog63z2d6t7mq5&st=ft3dqvcd&dl=0
+
+This folder has the 4d rendering result:https://www.dropbox.com/scl/fo/pr3wh9431hqzrgi4conni/AGVedHBAc6riFiU46QZ8pQo?rlkey=mlohuopohrtkxppta80e2npv6&st=to0m9a0i&dl=0
+
+You can view the 4d render result and change the camera view or the time frame, control signal to see the editing effect.
+
+
 
 ## Old version repo
 This old version is build upon gsplat 0.7 and old version nerfstudio,
