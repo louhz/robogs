@@ -40,3 +40,4 @@ mujoco
 mujoco-mjx
 plyfile
 rawpy
+openai

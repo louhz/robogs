@@ -4,9 +4,9 @@ This repo is updated for the gsplat 1.0 and newest mesh reconstruction method: 2
 Please follow the instruction and generate the digital asset, merge it with the policy training and sim2real deployment
 
 # installation
-
+```shell
 pip install -r requirement.txt
-
+```
 this will install all the real2sim necessary information other than stablenormal and colmap
 
 Please also make sure ffmpeg is installed in your system by: sudo apt install ffmpeg
