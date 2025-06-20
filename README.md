@@ -42,9 +42,9 @@ https://github.com/RoboOmniSim/Robostudio/tree/main
 step 1: a monocular 360 video
 
 Data Folder : ${datasetfolder} = sample_data
-
+```shell
 python robogs/vis/video2image.py -v sample_data/<video_path> -o sample_data/<image_output_directory> --num-frames <frame_count>
-
+```
 step 2: run struture from motion obtain features and camera pose
 
 running colmap given the extracted images : https://colmap.github.io/install.html
