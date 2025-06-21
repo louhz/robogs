@@ -89,8 +89,8 @@ Python Debugger: export ply
 * Extract mesh and render:
 
 ```shell
-python train.py -s $data_path$ -r 2 --contribution_prune_ratio 0.5 --lambda_normal_prior 1 --lambda_dist 10 --densify_until_iter 3000 --iteration 7000 -m $mesh_result_path$ --w_normal_prior normals
-python render.py -s $data_path$ -m $mesh_result_path$
+python robogs/meshrecon/train.py -s $data_path$ -r 2 --contribution_prune_ratio 0.5 --lambda_normal_prior 1 --lambda_dist 10 --densify_until_iter 3000 --iteration 7000 -m $mesh_result_path$ --w_normal_prior normals
+python robogs/meshrecon/render.py -s $data_path$ -m $mesh_result_path$
 ```
 
 or run the launch.json
@@ -121,7 +121,7 @@ python robogs/assign.py
 * Fine-tune MDH and physical properties.
 
 ```
-Python Debugger: debug
+run the launch.json: debug
 ```
 
 * Check associated demonstration video.
@@ -145,17 +145,46 @@ python robogs/mesh_util/fixbot.py -i input_mesh.stl -o output_mesh.stl
   * Compute bounding boxes and center of mass.
   * Infer physics parameters (VLM).
 
+```shell
+python robogs/mesh_util/generate_mjcf.py \
+    -o <output_mjcf_path.xml> \
+    -s <path_to_seed.ply> \
+    -m <path_to_original_scene.xml> \
+    --raw_image <path_to_raw_rgb_image.png> \
+    --seg_image <path_to_segmentation_image.png>
+```
 The sample mjcf are stored in the franka_leap and franka_robotiq
 ## Step 12: Simulation and Rendering
 
 * Load URDF/MJCF for simulation:
+After you have the mjcf, please also be careful about the mjcf joint angle limit between sim and real
 
+
+The scene should be align with the real world and able for rendering and simulation 
+
+examples: mjcf_asset/franka_robotiq/scene_cup_gripper.xml
+
+and see the keyframe for the similar result between sim and real. 
 
 ```
-Python Debugger: 4drender
+run the launch.json : 4drender
 ```
 
-## Step 13: Physics-aware Rendering
+<!-- ## Step 13: Physics-aware Rendering
 
 * Perform FK, IK, collision detection.
-* Execute 4D physics-aware rendering.
+* Execute 4D physics-aware rendering. -->
+
+
+if you find this work is helpful please cite this:
+```bibtex
+@misc{lou2024robogsphysicsconsistentspatialtemporal,
+  title={Robo-GS: A Physics Consistent Spatial-Temporal Model for Robotic Arm with Hybrid Representation}, 
+  author={Haozhe Lou and Yurong Liu and Yike Pan and Yiran Geng and Jianteng Chen and Wenlong Ma and Chenglong Li and Lin Wang and Hengzhen Feng and Lu Shi and Liyi Luo and Yongliang Shi},
+  year={2024},
+  eprint={2408.14873},
+  archivePrefix={arXiv},
+  primaryClass={cs.RO},
+  url={https://arxiv.org/abs/2408.14873}, 
+}
+```

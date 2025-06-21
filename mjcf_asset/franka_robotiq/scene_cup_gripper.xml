@@ -34,22 +34,30 @@
     <geom name="floor" pos="0 0 0.05" size="0 0 0.05" type="plane" material="grid"  condim="3"/>
 
 
-	  <body name="cup" pos="0.095 -0.07 0.048" quat="1 0 0 0">
+	  <body name="cup" pos="0 0 0.05" quat="1 0 0 0">
 	    
 	   <freejoint />
 		
 	    <geom name="cup" type="mesh" mesh="my_mesh" condim="3" mass="0.5"  friction="0.05 0.005 0.0001" />
 	  </body>
 	  
-	  <body name="plate" pos="0.095 -0.07 0.05" quat="1 0.0 0.0 0.0">
+	  <body name="plate" pos="0.095 -0.07 0.03" quat="1 0.0 0.0 0.0">
 	    
 		
 	    <geom name="plate" type="box" size='0.8 0.8 0.002' />
 	  </body>
 
-    
-  
+
 
     
   </worldbody>
+  
+      <keyframe>
+      <key name="home_pose"
+           qpos="0.1448 -0.1007 -0.0946 -2.38 0 2.12 0.034
+                 0 0 0 0 0 0
+                 0.0 0 0.05 1 0 0 0 
+                "/>
+    </keyframe>
+
 </mujoco>
