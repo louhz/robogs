@@ -41,9 +41,9 @@ We provide several pre-configured debug configurations in `.vscode/launch.json` 
 ## 📦 Example Data
 
 - **[Download Sample Data](https://drive.google.com/drive/folders/1dCbJDBsMVjn15Ka24NKPwzptnwVoCqYI?usp=sharing)**: Franka arm with parallel gripper and manipulated object
-- **[Download Demo Data](https://drive.google.com/file/d/1hMgGnJQXrdtUnP0CDaNcqFa15qR-hLnm/view?usp=sharing)**: Franka arm with Robotiq hand and manipulated object
-- **[Download Digital Assets](https://www.dropbox.com/scl/fo/pr3wh9431hqzrgi4conni/AGVedHBAc6riFiU46QZ8pQo?rlkey=mlohuopohrtkxppta80e2npv6&st=to0m9a0i&dl=0)**
-- **[Download 4D Rendering Results](https://www.dropbox.com/scl/fo/3rg66l348iyureo8amcen/AFm3SptGyT93fyFaXQghz-g?rlkey=ex134hgtuzzpog63z2d6t7mq5&st=ft3dqvcd&dl=0)**
+- **[Download Demo Data](https://www.dropbox.com/scl/fi/jfyeo8ntcn16tipbxxvcw/franka.mov?rlkey=wcal9uaurv8l4gsc0vw601bar&st=1jxae6d1&dl=0)**: Franka arm with Robotiq hand and manipulated object
+- **[Download Digital Assets](https://www.dropbox.com/scl/fo/3rg66l348iyureo8amcen/AFm3SptGyT93fyFaXQghz-g?rlkey=ex134hgtuzzpog63z2d6t7mq5&st=ft3dqvcd&dl=0)**
+- **[Download 4D Rendering Results](https://www.dropbox.com/scl/fo/pr3wh9431hqzrgi4conni/AGVedHBAc6riFiU46QZ8pQo?rlkey=mlohuopohrtkxppta80e2npv6&st=to0m9a0i&dl=0)**
 
 > **Tip:** You can interactively view 4D render results, change camera views, time frames, and control signals to see editing effects.
 
