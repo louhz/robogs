@@ -1,151 +1,161 @@
-# robogs official release
+# Robo-GS: A Physics Consistent Spatial-Temporal Model for Robotic Arm with Hybrid Representation
+
+[![arXiv](https://img.shields.io/badge/ArXiv-2408.14873-b31b1b.svg?style=plastic)](https://arxiv.org/abs/2408.14873) [![web](https://img.shields.io/badge/Web-Robostudio-blue.svg?style=plastic)](https://www.robostudioapp.com/) [![license](https://img.shields.io/badge/LICENSE-CC_BY--NC_4.0-white.svg?style=plastic)](https://github.com/louhz/robogs/blob/main/LICENSE)
 
 
+> **Official Release**  
+> We currently support *structure from motion* toolsets: **COLMAP** and **GLOMAP**.  
+> Follow the documentation for asset creation and 4D rendering.
 
-We current support structure from motion toolset colmap and glomap, please follow the offical repo for installation and running instruction
+## 📋 Table of Contents
 
-this repo contains information necessary for asset creation and 4d rendering
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Pipeline Overview](#pipeline-overview)
+- [Example Data](#example-data)
+- [Citation](#citation)
 
+## 🚀 Installation
 
-# Installation 
-
-Please install the latest torch version that is compatible with your device, we recommand torch 2.1 and cuda 11.8 later and earlier than cuda 12.8(we never test on the 50 series cuda device)
-
-torch installation: pip3 install torch torchvision torchaudio(torch 2.7.1+cuda12.6)
-
-Then cd in to robogs and follow the detail installation instruction
-
-
-# running command
-
-The key running command are stored in the launch.json, please run it with the vscode debugger
-
-You just need to replace the parent folder of your data 
-
-You can look into either the sample_data(franka arm+gripper+object)or the demo data(franka arm+allegro hand+object) 
-
-## Example Data Format
-
-run the Python Debugger: 4drender
-
-please download this folder for the digital asset we create: https://www.dropbox.com/scl/fo/3rg66l348iyureo8amcen/AFm3SptGyT93fyFaXQghz-g?rlkey=ex134hgtuzzpog63z2d6t7mq5&st=ft3dqvcd&dl=0
-
-This folder has the 4d rendering result:https://www.dropbox.com/scl/fo/pr3wh9431hqzrgi4conni/AGVedHBAc6riFiU46QZ8pQo?rlkey=mlohuopohrtkxppta80e2npv6&st=to0m9a0i&dl=0
-
-You can view the 4d render result and change the camera view or the time frame, control signal to see the editing effect.
-
-
-
-## Old version repo
-This old version is build upon gsplat 0.7 and old version nerfstudio,
-if you want to view the result of the demo shows in the paper, please look into this
-https://github.com/RoboOmniSim/Robostudio/tree/main
-
-
-
-
-# Create your own digital Asset
-
-##  step 1: a monocular 360 video
-
-sample_data: https://drive.google.com/drive/folders/1dCbJDBsMVjn15Ka24NKPwzptnwVoCqYI?usp=sharing
-
-demo_data: https://drive.google.com/file/d/1hMgGnJQXrdtUnP0CDaNcqFa15qR-hLnm/view?usp=sharing
-
-Data Folder : ${datasetfolder} = sample_data
-```shell
-python robogs/vis/video2image.py -v sample_data/<video_path> -o sample_data/<image_output_directory> --num-frames <frame_count>
-```
-##  step 2: run struture from motion obtain features and camera pose
-
-running colmap given the extracted images : https://colmap.github.io/install.html
-
-##  step 3: run gsplat_trainer
-
-Python Debugger: gsplat_trainer
-
-##  step 4: run stable normal and save normal images to the normals folder
-
-input the extracted images and pass it to stablenormal: https://huggingface.co/spaces/Stable-X/StableNormal
-
-
-# Gaussian Splat and Mesh Processing Pipeline
-
-## Step 5: Extract Gaussian Splats, Mesh, and View
-
-**Gaussian Splat Extraction**
-
-* Data Folder: \`\$data\_path\$
-
-```
-Python Debugger: export ply
+**[PyTorch](https://pytorch.org/get-started/previous-versions/)** (Recommended: PyTorch 2.1 + CUDA 11.8-12.6):
+```bash
+pip3 install torch torchvision torchaudio  # torch 2.7.1 with cuda 12.6
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118  # torch 2.7.1 with cuda 11.8
 ```
 
-* View and edit Gaussian Splats: [SuperSplat Viewer](https://superspl.at/editor/)
+> **⚠️ Note:** CUDA 11.8 or later is recommended, but not CUDA 12.8 or newer. 50-series CUDA devices are untested.
 
-**Mesh Extraction**
+**Structure from Motion Tools**
 
+- **[COLMAP Installation Guide](https://colmap.github.io/install.html)**
+- **[GLOMAP Repository](https://github.com/GLOMAP/GLOMAP)** (follow their official instructions)
 
-* Extract mesh and render:
+### Project Setup
 
-```shell
-python robogs/meshrecon/train.py -s $data_path$ -r 2 --contribution_prune_ratio 0.5 --lambda_normal_prior 1 --lambda_dist 10 --densify_until_iter 3000 --iteration 7000 -m $mesh_result_path$ --w_normal_prior normals
-python robogs/meshrecon/render.py -s $data_path$ -m $mesh_result_path$
+Follow the detailed installation instructions in [robogs/installation.md](robogs/installation.md).
+
+## 🎯 Quick Start
+
+We provide several pre-configured debug configurations in `.vscode/launch.json` for different pipeline stages. To use these configurations, replace the data paths with your own data location in the launch.json file.
+
+## 📦 Example Data
+
+- **[Download Sample Data](https://drive.google.com/drive/folders/1dCbJDBsMVjn15Ka24NKPwzptnwVoCqYI?usp=sharing)**: Franka arm with parallel gripper and manipulated object
+- **[Download Demo Data](https://drive.google.com/file/d/1hMgGnJQXrdtUnP0CDaNcqFa15qR-hLnm/view?usp=sharing)**: Franka arm with Robotiq hand and manipulated object
+- **[Download Digital Assets](https://www.dropbox.com/scl/fo/pr3wh9431hqzrgi4conni/AGVedHBAc6riFiU46QZ8pQo?rlkey=mlohuopohrtkxppta80e2npv6&st=to0m9a0i&dl=0)**
+- **[Download 4D Rendering Results](https://www.dropbox.com/scl/fo/3rg66l348iyureo8amcen/AFm3SptGyT93fyFaXQghz-g?rlkey=ex134hgtuzzpog63z2d6t7mq5&st=ft3dqvcd&dl=0)**
+
+> **Tip:** You can interactively view 4D render results, change camera views, time frames, and control signals to see editing effects.
+
+### Legacy Version
+For results from the original paper (using GSplat 0.7 and old NeRFStudio), see the [Old Version Repository](https://github.com/RoboOmniSim/Robostudio).
+
+## 🔄 Complete Pipeline
+
+### Step 1: Capture Monocular 360° Video
+
+Extract frames from video:
+```bash
+python robogs/vis/video2image.py \
+    -v sample_data/<video_path> \
+    -o sample_data/<image_output_directory> \
+    --num-frames <frame_count>
 ```
 
-or run the launch.json
+### Step 2: Structure from Motion
 
-trainmesh
-extractmesh
+Run COLMAP on the extracted images to obtain features and camera poses. See the [COLMAP documentation](https://colmap.github.io/install.html) for details.
 
+### Step 3: GSplat Training
 
-## Step 6: Align Scene
+Train the Gaussian Splatting model:
+```bash
+python robogs/vis/gsplat_trainer.py \
+    default \
+    --data_dir sample_data \
+    --data_factor 1 \
+    --result-dir sample_data/gs_result_sfm
+```
 
-* Refer to demonstration video for alignment.
+or if you want to launch with debugger, please refer to the configuration `Python Debugger: gsplat_trainer` in `.vscode/launch.json`.
 
-## Step 7: Segment and Semantic Label
+### Step 4: Normal Map Generation
 
-* Watch segmentation and labeling demonstration.
-* SAM-based segmentation (coming soon).
+Use the [StableNormal Tool](https://github.com/Stable-X/StableNormal) to generate normal maps from the extracted images. Save the normal images to the `normals` folder.
 
-## Step 8: Assign ID
+### Step 5: Gaussian Splat & Mesh Processing
 
-* Assign custom IDs:
+#### Gaussian Splat Extraction
 
-```shell
+Extract Gaussian Splat point clouds:
+```bash
+python robogs/vis/extract_ply.py \
+    --input <trained_model_path> \
+    --output <output_ply_path>
+```
+
+or if you want to launch with debugger, please refer to the configuration `Python Debugger: export ply` in `.vscode/launch.json`.
+
+To view and edit Gaussian Splat, use the [SuperSplat Viewer](https://superspl.at/editor/).
+
+#### Mesh Extraction
+
+Train and render mesh:
+```bash
+python robogs/meshrecon/train.py \
+    -s <data_path> \
+    -r 2 \
+    --contribution_prune_ratio 0.5 \
+    --lambda_normal_prior 1 \
+    --lambda_dist 10 \
+    --densify_until_iter 3000 \
+    --iteration 7000 \
+    -m <mesh_result_path> \
+    --w_normal_prior normals
+
+python robogs/meshrecon/render.py \
+    -s <data_path> \
+    -m <mesh_result_path>
+```
+
+You can also use the VSCode debugger configurations `trainmesh` and `extractmesh` for these steps.
+
+### Step 6: Scene Alignment
+
+Align the reconstructed scene. Refer to the demonstration video for details.
+
+### Step 7: Segmentation & Labeling
+
+Segment and label the scene. See the demonstration video for details. (A SAM-based segmentation tool is coming soon.)
+
+### Step 8: ID Assignment
+
+Assign custom IDs:
+```bash
 python robogs/assign.py
 ```
 
-## Step 9: Adjust Kinematics and Dynamics
+### Step 9: Kinematics & Dynamics
 
-* Fine-tune MDH and physical properties.
+Fine-tune MDH and physical properties using the `Python Debugger: debug` configuration in VSCode. See the demo video for more information.
 
-```
-run the launch.json: debug
-```
+### Step 10: Coordinate & Scale Alignment
 
-* Check associated demonstration video.
+- Recenter and reorient the Gaussian Splats and mesh.
+- Keep alignment vectors.
+- Perform automatic ICP-based scale registration.
 
-## Step 10: Coordinate and Scale Alignment
+### Step 11: URDF/MJCF Generation
 
-* Recenter and reorient Gaussian Splats and mesh.
-* Keep alignment vectors.
-* Perform automatic or ICP-based scale registration.
-
-## Step 11: Generate URDF/MJCF
-
-* Clean mesh bottom:
-
-```shell
-python robogs/mesh_util/fixbot.py -i input_mesh.stl -o output_mesh.stl
+Clean the mesh bottom:
+```bash
+python robogs/mesh_util/fixbot.py \
+    -i input_mesh.stl \
+    -o output_mesh.stl
 ```
 
-* Generate URDF/MJCF:
-
-  * Compute bounding boxes and center of mass.
-  * Infer physics parameters (VLM).
-
-```shell
+Generate URDF/MJCF:
+```bash
 python robogs/mesh_util/generate_mjcf.py \
     -o <output_mjcf_path.xml> \
     -s <path_to_seed.ply> \
@@ -153,30 +163,19 @@ python robogs/mesh_util/generate_mjcf.py \
     --raw_image <path_to_raw_rgb_image.png> \
     --seg_image <path_to_segmentation_image.png>
 ```
-The sample mjcf are stored in the franka_leap and franka_robotiq
-## Step 12: Simulation and Rendering
 
-* Load URDF/MJCF for simulation:
-After you have the mjcf, please also be careful about the mjcf joint angle limit between sim and real
+Sample MJCF files are stored in the `franka_leap` and `franka_robotiq` folders.
 
+### Step 12: Simulation & Rendering
 
-The scene should be align with the real world and able for rendering and simulation 
+> **⚠️ Important**: After generating MJCF, carefully check joint angle limits between simulation and real-world.
 
-examples: mjcf_asset/franka_robotiq/scene_cup_gripper.xml
+The scene should be aligned with the real world and ready for rendering and simulation. See `mjcf_asset/franka_robotiq/scene_cup_gripper.xml` for an example, and refer to the `Python Debugger: 4drender` configuration in VSCode for visualization.
 
-and see the keyframe for the similar result between sim and real. 
+## 📚 Citation
 
-```
-run the launch.json : 4drender
-```
+If you find this work helpful, please cite:
 
-<!-- ## Step 13: Physics-aware Rendering
-
-* Perform FK, IK, collision detection.
-* Execute 4D physics-aware rendering. -->
-
-
-if you find this work is helpful please cite this:
 ```bibtex
 @misc{lou2024robogsphysicsconsistentspatialtemporal,
   title={Robo-GS: A Physics Consistent Spatial-Temporal Model for Robotic Arm with Hybrid Representation}, 
