@@ -9,11 +9,11 @@
 
 ## 📋 Table of Contents
 
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Pipeline Overview](#pipeline-overview)
-- [Example Data](#example-data)
-- [Citation](#citation)
+- [Installation](#🚀-installation)
+- [Quick Start](#🎯-quick-start)
+- [Example Data](#📦-example-data)
+- [Pipeline Overview](#🔄-complete-pipeline)
+- [Citation](#📚-citation)
 
 ## 🚀 Installation
 
@@ -28,7 +28,7 @@ pip3 install torch torchvision torchaudio --index-url https://download.pytorch.o
 **Structure from Motion Tools**
 
 - **[COLMAP Installation Guide](https://colmap.github.io/install.html)**
-- **[GLOMAP Repository](https://github.com/GLOMAP/GLOMAP)** (follow their official instructions)
+- **[GLOMAP Repository](https://github.com/colmap/glomap)** (follow their official instructions)
 
 ### Project Setup
 
@@ -81,7 +81,7 @@ or if you want to launch with debugger, please refer to the configuration `Pytho
 
 ### Step 4: Normal Map Generation
 
-Use the [StableNormal Tool](https://github.com/Stable-X/StableNormal) to generate normal maps from the extracted images. Save the normal images to the `normals` folder.
+Use the [StableNormal](https://github.com/Stable-X/StableNormal) to generate normal maps from the extracted images. Save the normal images to the `normals` folder.
 
 ### Step 5: Gaussian Splat & Mesh Processing
 
