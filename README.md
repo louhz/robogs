@@ -56,9 +56,13 @@ For results from the original paper (using GSplat 0.7 and old NeRFStudio), see t
 
 Extract frames from video:
 ```bash
+<data_path> = sample_data
+```
+
+```bash
 python robogs/vis/video2image.py \
-    -v sample_data/<video_path> \
-    -o sample_data/<image_output_directory> \
+    -v <data_path>/<video_path> \
+    -o <data_path>/<image_output_directory> \
     --num-frames <frame_count>
 ```
 
@@ -72,9 +76,9 @@ Train the Gaussian Splatting model:
 ```bash
 python robogs/vis/gsplat_trainer.py \
     default \
-    --data_dir sample_data \
+    --data_dir  <data_path> \
     --data_factor 1 \
-    --result-dir sample_data/gs_result_sfm
+    --result-dir  <data_path>/gs_result_sfm
 ```
 
 or if you want to launch with debugger, please refer to the configuration `Python Debugger: gsplat_trainer` in `.vscode/launch.json`.
@@ -90,8 +94,15 @@ Use the [StableNormal](https://github.com/Stable-X/StableNormal) to generate nor
 Extract Gaussian Splat point clouds:
 ```bash
 python robogs/vis/extract_ply.py \
-    --input <trained_model_path> \
-    --output <output_ply_path>
+    default \
+    --ckpt \
+    <data_path>/gs_result_sfm/ckpts/ckpt_29999_rank0.pt \
+    --data_factor \
+    1 \
+    --export_ply_path \
+    <data_path>/gs_result_sfm/scan30000.ply \
+    --data_dir \
+    <data_path> 
 ```
 
 or if you want to launch with debugger, please refer to the configuration `Python Debugger: export ply` in `.vscode/launch.json`.
