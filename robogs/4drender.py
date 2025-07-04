@@ -1246,7 +1246,7 @@ if __name__ == '__main__':
         for k in runner.splats.keys():
             runner.splats[k].data = torch.cat([ckpt["splats"][k] for ckpt in ckpts])
         step = ckpts[0]["step"]
-        runner.eval(step=step,ply_file='/home/haozhe/Dropbox/rendering/asset/final_scene_with_ids.ply')
+        runner.eval_traj(step=step,ply_file='./asset/final_scene_with_ids.ply', outpath='./render')
 
         # load the final_scene_with_ids, edit it
 

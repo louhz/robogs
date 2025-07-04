@@ -8,6 +8,7 @@ workspace_dir = os.path.dirname(current_file_dir)
 
 sys.path.append(workspace_dir)
 
+import warnings
 import json
 import math
 import os
@@ -751,7 +752,9 @@ class Runner:
 
             
         # Helper function for rendering
-    def render_step(self, xyz_out, rots_out, scales_out, opacities_out, fdc_out, fextra_out, device, camtoworlds, Ks, width, height, masks, cfg, stage, step):
+    def render_step(self, xyz_out, rots_out, scales_out, opacities_out, fdc_out, fextra_out, device, camtoworlds, Ks, width, height, masks, cfg, stage, step, 
+                    frame,
+                    out_path):
         self.splats["means"] = torch.from_numpy(xyz_out).to(device).float()
         self.splats["quats"] = torch.from_numpy(rots_out).to(device)
         self.splats["scales"] = torch.from_numpy(scales_out).to(device)
@@ -769,20 +772,24 @@ class Runner:
             masks=masks,
         )
 
-        colors = torch.clamp(renders[..., 0:3], 0.0, 1.0)
+        colors = torch.clamp(renders[..., :3], 0.0, 1.0)
         canvas = colors.squeeze(0).cpu().numpy()
         canvas = (canvas * 255).astype(np.uint8)
 
         imageio.imwrite(
-            f"/home/haozhe/Dropbox/rendering/asset/video/view2/{stage}_step{step:03d}.png",
+            f"{out_path}/{frame}_{stage}_step{step:03d}.png",
             canvas
         )
 
         # Cleanup
-        del self.splats['means'], self.splats['quats'], self.splats['scales']
-        del self.splats['opacities'], self.splats['sh0'], self.splats['shN']
+        keys_to_delete = ['means', 'quats', 'scales', 'opacities', 'sh0', 'shN']
+        for key in keys_to_delete:
+            if key in self.splats:
+                del self.splats[key]
+
         torch.cuda.empty_cache()
         gc.collect()
+
 
     @torch.no_grad()
     def eval(self, step: int, stage: str = "val", ply_file: str = None):
@@ -839,6 +846,98 @@ class Runner:
                     fextra_out, device, camtoworlds, Ks, width, height, masks, cfg, stage, step
                 )
 
+    @torch.no_grad()
+    def eval_traj(self, step: int, stage: str = "val", ply_file: str = None, outpath: str = None):
+        """Entry for evaluation."""
+        print("Running evaluation...")
+        cfg = self.cfg
+        device = self.device
+
+        if outpath is None:
+            raise ValueError("outpath parameter cannot be None")
+
+        if os.path.exists(outpath):
+            warnings.warn(f"Output path '{outpath}' already exists. Files may be overwritten.")
+        else:
+            os.makedirs(outpath)
+
+        trainloader = torch.utils.data.DataLoader(
+            self.trainset, batch_size=1, shuffle=False, num_workers=1
+        )
+
+        camtoworlds1 = torch.tensor(
+            [[[-0.6800, 0.4781, -0.5559, 1.8009],
+            [0.1233, -0.6728, -0.7295, 1.4379],
+            [-0.7228, -0.5646, 0.3985, -0.9330],
+            [0.0000, 0.0000, 0.0000, 1.0000]]], device=device
+        )
+
+        camtoworlds2 = torch.tensor(
+            [[[0.3487, 0.7220, -0.5976, 1.8779],
+            [0.5092, -0.6813, -0.5259, 1.4589],
+            [-0.7869, -0.1209, -0.6052, 1.3671],
+            [0.0000, 0.0000, 0.0000, 1.0000]]], device=device
+        )
+
+
+
+        # Select trajectory generation mode
+        if cfg.render_traj_path == "interp":
+            camtoworlds_all = generate_interpolated_path(
+                np.concatenate([camtoworlds1.cpu().numpy(), camtoworlds2.cpu().numpy()], axis=0), n_interp=30
+            )  # [N, 3, 4]
+
+        elif cfg.render_traj_path == "ellipse":
+            height = (camtoworlds1[0, 2, 3].item() + camtoworlds2[0, 2, 3].item()) / 2
+            camtoworlds_all = generate_ellipse_path_z(
+                np.concatenate([camtoworlds1.cpu().numpy(), camtoworlds2.cpu().numpy()], axis=0), height=height, n_interp=30
+            )  # [N, 3, 4]
+
+        elif cfg.render_traj_path == "spiral":
+            camtoworlds_all = generate_spiral_path(
+                np.concatenate([camtoworlds1.cpu().numpy(), camtoworlds2.cpu().numpy()], axis=0),
+                bounds=(self.parser.bounds * self.scene_scale).cpu().numpy(),
+                spiral_scale_r=self.parser.extconf["spiral_radius_scale"],
+                n_interp=30
+            )
+        else:
+            raise ValueError(f"Render trajectory type not supported: {cfg.render_traj_path}")
+
+        # Append [0, 0, 0, 1] to make it 4x4 homogeneous matrices
+        num_frames = camtoworlds_all.shape[0]
+        extra_row = np.tile(np.array([0, 0, 0, 1], dtype=np.float32), (num_frames, 1, 1))
+        camtoworlds_all = np.concatenate([camtoworlds_all, extra_row], axis=1)
+
+        camtoworlds_all = torch.from_numpy(camtoworlds_all).float().to(device)
+
+
+        data = trainloader.dataset[0]
+
+        Ks = data["K"].to(device).view(1, 3, 3)
+        pixels = data["image"].to(device) / 255.0
+        pixels = pixels.view(1, pixels.shape[0], pixels.shape[1], 3)
+        masks = data.get("mask", None)
+        if masks is not None:
+            masks = masks.to(device)
+
+        height, width = pixels.shape[1:3]
+
+        torch.cuda.synchronize()
+
+        xyz, features_dc, features_extra, opacities, scales, rots, semantic_id = load_ply_sam(ply_file)
+
+        features_dc_use=torch.from_numpy(features_dc).transpose(1, 2).cpu().numpy()
+        # Render for each camera in the generated trajectory
+        for idx, c2w in enumerate(camtoworlds_all):
+            c2w = c2w.unsqueeze(0)  # add batch dimension
+
+            print(f"Rendering frame {idx+1}/{len(camtoworlds_all)}...")
+            self.render_step(
+                xyz, rots, scales, opacities, features_dc_use,
+                features_extra, device, c2w, Ks, width, height, masks, cfg, stage, step,
+                frame=idx,
+                out_path=outpath
+            )
 
 
 
