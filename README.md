@@ -137,11 +137,11 @@ You can also use the VSCode debugger configurations `trainmesh` and `extractmesh
 
 ### Step 6: Scene Alignment
 
-Align the reconstructed scene. Refer to the demonstration video for details.
+Align the reconstructed scene. Refer to the demonstration video [here](https://youtu.be/xn_U4ZS4BvM) for details.
 
 ### Step 7: Segmentation & Labeling
 
-Segment and label the scene. See the demonstration video for details. (A SAM-based segmentation tool is coming soon.)
+Segment and label the scene. See the demonstration video [here](https://youtu.be/vIjKKaCwVjI) for details. (A SAM-based segmentation tool is coming soon.)
 
 ### Step 8: ID Assignment
 
