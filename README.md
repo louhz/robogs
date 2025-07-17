@@ -113,7 +113,7 @@ To edit the point clouds, refer to the demonstration videos for details. You can
 
 <p align="left">
   <a href="https://youtu.be/GVoSN8rkeqs">
-    <img src="https://youtu.be/GVoSN8rkeqs" alt="select links" width="70%">
+    <img alt="select links" width="70%">
   </a>
 </p>
 
@@ -121,7 +121,7 @@ and how to select fingers here:
 
 <p align="left">
   <a href="https://youtu.be/sqq_Or635JU">
-    <img src="https://youtu.be/sqq_Or635JU" alt="select fingerss" width="70%">
+    <img alt="select fingers" width="70%">
   </a>
 </p>
 
