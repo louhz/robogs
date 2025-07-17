@@ -63,7 +63,7 @@ Extract frames from video:
 python robogs/vis/video2image.py \
     -v <data_path>/<video_path> \
     -o <data_path>/<image_output_directory> \
-    --num-frames <frame_count>
+    --num_frames <frame_count>
 ```
 
 ### Step 2: Structure from Motion
