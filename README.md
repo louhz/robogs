@@ -109,21 +109,9 @@ or if you want to launch with debugger, please refer to the configuration `Pytho
 
 To view and edit Gaussian Splat, use the [SuperSplat Viewer](https://superspl.at/editor/).
 
-To edit the point clouds, refer to the demonstration videos for details. You can see how to select the links here:
+To edit the point clouds, refer to the demonstration videos for details. You can see how to select the links here: [select links](https://youtu.be/GVoSN8rkeqs)
 
-<p align="left">
-  <a href="https://youtu.be/GVoSN8rkeqs">
-    <img alt="select links" width="70%">
-  </a>
-</p>
-
-and how to select fingers here:
-
-<p align="left">
-  <a href="https://youtu.be/sqq_Or635JU">
-    <img alt="select fingers" width="70%">
-  </a>
-</p>
+and how to select fingers here: [select fingers](https://youtu.be/sqq_Or635JU)
 
 #### Mesh Extraction
 
