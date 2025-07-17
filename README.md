@@ -111,14 +111,10 @@ To view and edit Gaussian Splat, use the [SuperSplat Viewer](https://superspl.at
 
 To edit the point clouds, refer to the demonstration videos for details. You can see how to select the links here:
 
-<p align="left">
-  <iframe width="560" height="315" 
-          src="https://youtu.be/GVoSN8rkeqs" 
-          title="YouTube video player" 
-          frameborder="0" 
-          allowfullscreen>
-  </iframe>
-</p>
+<iframe width="560" height="315" 
+        src="https://youtu.be/GVoSN8rkeqs"
+        frameborder="0">
+</iframe>
 
 and how to select fingers here:
 
