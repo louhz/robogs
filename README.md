@@ -63,7 +63,7 @@ Extract frames from video:
 python robogs/vis/video2image.py \
     -v <data_path>/<video_path> \
     -o <data_path>/<image_output_directory> \
-    --num-frames <frame_count>
+    --num_frames <frame_count>
 ```
 
 ### Step 2: Structure from Motion
@@ -109,6 +109,10 @@ or if you want to launch with debugger, please refer to the configuration `Pytho
 
 To view and edit Gaussian Splat, use the [SuperSplat Viewer](https://superspl.at/editor/).
 
+To edit the point clouds, refer to the demonstration videos for details. You can see how to select the links here: [select links](https://youtu.be/GVoSN8rkeqs)
+
+and how to select fingers here: [select fingers](https://youtu.be/sqq_Or635JU)
+
 #### Mesh Extraction
 
 Train and render mesh:
@@ -116,10 +120,8 @@ Train and render mesh:
 python robogs/meshrecon/train.py \
     -s <data_path> \
     -r 2 \
-    --contribution_prune_ratio 0.5 \
     --lambda_normal_prior 1 \
     --lambda_dist 10 \
-    --densify_until_iter 3000 \
     --iteration 7000 \
     -m <mesh_result_path> \
     --w_normal_prior normals
@@ -133,11 +135,11 @@ You can also use the VSCode debugger configurations `trainmesh` and `extractmesh
 
 ### Step 6: Scene Alignment
 
-Align the reconstructed scene. Refer to the demonstration video for details.
+Align the reconstructed scene. Refer to the demonstration video [here](https://youtu.be/xn_U4ZS4BvM) for details.
 
 ### Step 7: Segmentation & Labeling
 
-Segment and label the scene. See the demonstration video for details. (A SAM-based segmentation tool is coming soon.)
+Segment and label the scene. See the demonstration video [here](https://youtu.be/vIjKKaCwVjI) for details. (A SAM-based segmentation tool is coming soon.)
 
 ### Step 8: ID Assignment
 
