@@ -120,10 +120,8 @@ Train and render mesh:
 python robogs/meshrecon/train.py \
     -s <data_path> \
     -r 2 \
-    --contribution_prune_ratio 0.5 \
     --lambda_normal_prior 1 \
     --lambda_dist 10 \
-    --densify_until_iter 3000 \
     --iteration 7000 \
     -m <mesh_result_path> \
     --w_normal_prior normals
