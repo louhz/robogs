@@ -342,7 +342,9 @@ def deform_arm(xyz, features_dc, features_extra, opacities, scales, rots, semant
             "rots": [], "features_dc": [], "semantic_id": []
         }
     
-    background_id = [0,1,14,15]
+    # background_id = [0,1,14,15]
+
+    background_id = [1,14,15]
     active_id = [2,3,4,5,6,7,8,9,10]
     finger_id1 = [11]
     finger_id2 = [12]
@@ -571,9 +573,149 @@ def deform_arm(xyz, features_dc, features_extra, opacities, scales, rots, semant
     
 
 
+def deform_object_incorrect(xyz, features_dc, features_extra, opacities, scales, rots, semantic_id):
+    background_fixed = [1, 14]
+    moving_object_id = [15]
+    fixed_arm_and_fingers = [2,3,4,5,6,7,8,9,10,11,12,13]
+
+    angles_deg = [0, 15, 26, 38, 55, 65, 80, 103, 115, 130, 140]
+    translations_list = [
+        [0.0, -0.0000, -0.0000], [0.0, -0.0000, -0.0200], [0.0, -0.0020, -0.0400],
+        [0.0, -0.0135, -0.0600], 
+        
+        [0.0, -0.02, -0.0700], [0.0, -0.0350, -0.0800],
+        [0.0, -0.060, -0.1050], [0.0, -0.0850, -0.1150], [0.0, -0.0100, -0.1350],
+        [0.0, -0.1150, -0.150], [0.0, -0.1290, -0.1650]
+    ]
+
+    inv_joint_value = torch.tensor(
+        [-0.47, 0.07, 0.07, -1.53, 1.5, 1.186, 0.695, 0, 0, 0, 0, 0],
+        dtype=torch.float
+    )
+    final_joint_value = torch.tensor(
+        [-0.28, -0.205, 0.07, -1.72, 1.426, 0.848, 0.2, 0, 0, 0, 0, 0],
+        dtype=torch.float
+    )
+    
+    num_keyframes = len(angles_deg)
+    num_subdiv = 10
+
+    _, inv_transformation = calculate_franka_mdh_pre_frame(inv_joint_value[:12])
+    inv_trans = inverse_affine_transformation_torch(inv_transformation[:12])
+
+    _, transformation = calculate_franka_mdh_pre_frame(final_joint_value[:12])
+
+    for kf in range(num_keyframes - 1):
+        angle_start = angles_deg[kf]
+        angle_end = angles_deg[kf + 1]
+        t_start = torch.tensor(translations_list[kf], dtype=torch.float)
+        t_end = torch.tensor(translations_list[kf + 1], dtype=torch.float)
+
+        for substep in range(num_subdiv):
+            frac = substep / (num_subdiv - 1)
+            angle_now = angle_start * (1 - frac) + angle_end * frac
+            t_now = t_start * (1 - frac) + t_end * frac
+
+            q_rad = torch.tensor([angle_now]).deg2rad()
+
+            rotation_splat = torch.tensor([
+                [1, 0, 0],
+                [0, torch.cos(q_rad), torch.sin(q_rad)],
+                [0, -torch.sin(q_rad), torch.cos(q_rad)]
+            ], dtype=torch.float).squeeze(0)
+
+            outputs = {k: [] for k in ["xyz", "opacities", "scales",
+                                       "features_extra", "rots", "features_dc", "semantic_id"]}
+
+            # Deform arm and fingers based on joint angles
+            for arm_id in fixed_arm_and_fingers:
+                select_xyz, select_opacities, select_scales, select_features_extra, select_rotation, select_feature_dc, semantic_id_ind_sam = filter_with_semantic(
+                    semantic_id, [arm_id], xyz, opacities, scales,
+                    features_extra, rots, features_dc, 0
+                )
+
+                select_xyz = torch.tensor(select_xyz, dtype=torch.float)
+                select_rotation = torch.tensor(select_rotation, dtype=torch.float)
+                kinematic_id = arm_id - 2 if arm_id < 11 else 7
+
+                inv_rotation_raw = inv_trans[kinematic_id][:3, :3]
+                inv_translation = inv_trans[kinematic_id][:3, 3]
+
+                rotation_raw = transformation[kinematic_id][:3, :3]
+                translation = transformation[kinematic_id][:3, 3]
+
+                deform_point = select_xyz @ inv_rotation_raw.T + inv_translation
+                forward_point = deform_point @ rotation_raw.T + translation
+
+                rotation_splat_arm = rotation_raw @ inv_rotation_raw
+                rot_mat_in = quaternion_to_matrix(select_rotation)
+                rot_matrix_transformed = rotation_splat_arm[None, :, :] @ rot_mat_in
+                select_rotation_deformed = matrix_to_quaternion(rot_matrix_transformed)
+
+                select_tensors = [forward_point,
+                                  torch.tensor(select_opacities, dtype=torch.float),
+                                  torch.tensor(select_scales, dtype=torch.float),
+                                  torch.tensor(select_features_extra, dtype=torch.float),
+                                  select_rotation_deformed,
+                                  torch.tensor(select_feature_dc, dtype=torch.float),
+                                  torch.tensor(semantic_id_ind_sam, dtype=torch.float)]
+
+                _append_outputs(outputs, *select_tensors)
+
+
+            # Fixed background, arm, and fingers
+            for fixed_id in background_fixed :
+                select_data = filter_with_semantic(
+                    semantic_id, [fixed_id], xyz, opacities, scales,
+                    features_extra, rots, features_dc, 0
+                )
+                select_tensors = [torch.tensor(sd, dtype=torch.float) for sd in select_data]
+                _append_outputs(outputs, *select_tensors)
+
+
+
+            # Moving object (id=15)
+            select_xyz, select_opacities, select_scales, select_features_extra, select_rotation, select_feature_dc, semantic_id_ind_sam = filter_with_semantic(
+                semantic_id, moving_object_id, xyz, opacities, scales,
+                features_extra, rots, features_dc, 0
+            )
+
+            recenter_vector = recenter_list[14]
+            select_xyz_recentered = torch.tensor(select_xyz + recenter_vector, dtype=torch.float)
+            select_xyz_deformed = select_xyz_recentered @ rotation_splat.T - recenter_vector + t_now
+
+            rot_mat_in = quaternion_to_matrix(torch.tensor(select_rotation, dtype=torch.float))
+            rot_matrix_transformed = torch.matmul(rotation_splat[None, :, :], rot_mat_in)
+            select_rotation_deformed = matrix_to_quaternion(rot_matrix_transformed)
+
+            select_features_extra_deformed = sh_rotation_torch(
+                torch.tensor(select_features_extra, dtype=torch.float),
+                torch.tensor(select_feature_dc, dtype=torch.float),
+                rotation_splat
+            )
+
+            _append_outputs(outputs,
+                            select_xyz_deformed,
+                            torch.tensor(select_opacities, dtype=torch.float),
+                            torch.tensor(select_scales, dtype=torch.float),
+                            select_features_extra_deformed,
+                            select_rotation_deformed,
+                            torch.tensor(select_feature_dc, dtype=torch.float),
+                            torch.tensor(semantic_id_ind_sam, dtype=torch.float))
+
+            xyz_out = torch.cat(outputs["xyz"], dim=0).cpu().numpy()
+            opacities_out = torch.cat(outputs["opacities"], dim=0).cpu().numpy()
+            scales_out = torch.cat(outputs["scales"], dim=0).cpu().numpy()
+            fextra_out = torch.cat(outputs["features_extra"], dim=0).cpu().numpy()
+            rots_out = torch.cat(outputs["rots"], dim=0).cpu().numpy()
+            fdc_out = torch.cat(outputs["features_dc"], dim=0).transpose(1, 2).cpu().numpy()
+            sem_out = torch.cat(outputs["semantic_id"], dim=0).cpu().numpy()
+
+            yield xyz_out, opacities_out, scales_out, fextra_out, rots_out, fdc_out, sem_out
+
 
 def deform_object(xyz, features_dc, features_extra, opacities, scales, rots, semantic_id):
-    background_fixed = [0, 1, 14]
+    background_fixed = [1, 14]
     moving_object_id = [15]
     fixed_arm_and_fingers = [2,3,4,5,6,7,8,9,10,11,12,13]
 
@@ -595,7 +737,7 @@ def deform_object(xyz, features_dc, features_extra, opacities, scales, rots, sem
     )
     
     num_keyframes = len(angles_deg)
-    num_subdiv = 20
+    num_subdiv = 10
 
     _, inv_transformation = calculate_franka_mdh_pre_frame(inv_joint_value[:12])
     inv_trans = inverse_affine_transformation_torch(inv_transformation[:12])
@@ -712,14 +854,14 @@ def deform_object(xyz, features_dc, features_extra, opacities, scales, rots, sem
 
 
 def deform_finger(xyz, features_dc, features_extra, opacities, scales, rots, semantic_id):
-    background_fixed = [0, 1, 14, 15]
+    background_fixed = [1, 14, 15]
     fixed_arm_and_fingers = [2,3,4,5,6,7,8,9,10]
     finger_ids = [[11], [12], [13]]
 
     inv_joint_value = torch.tensor([-0.47, 0.07, 0.07, -1.53, 1.5, 1.186, 0.695, 0, 0, 0, 0, 0], dtype=torch.float)
     joint_control_action = torch.tensor([-0.28, -0.205, 0.07, -1.72, 1.426, 0.848, 0.1, 0, 0, 0, 0, 0], dtype=torch.float)
 
-    num_steps = 70
+    num_steps = 50
     _, inv_transformation = calculate_franka_mdh_pre_frame(inv_joint_value[:12])
     inv_trans = inverse_affine_transformation_torch(inv_transformation[:12])
 
@@ -966,19 +1108,19 @@ def deform_finger_only(xyz, features_dc, features_extra, opacities, scales, rots
         
 def deform_scene_combined(xyz, features_dc, features_extra, opacities, scales, rots, semantic_id):
     finger_steps = list(deform_finger(xyz, features_dc, features_extra, opacities, scales, rots, semantic_id))
-    object_steps = list(deform_object(xyz, features_dc, features_extra, opacities, scales, rots, semantic_id))
-
+    # object_steps = list(deform_object(xyz, features_dc, features_extra, opacities, scales, rots, semantic_id))
+    object_steps = list(deform_object_incorrect(xyz, features_dc, features_extra, opacities, scales, rots, semantic_id))
     finger_ids = [11, 12, 13]
     object_id = 15
 
     # Frames 0–22: finger deformation only
-    for step in range(50):
+    for step in range(40):
         yield finger_steps[step]
 
-    base_finger_frame = finger_steps[50]
+    base_finger_frame = finger_steps[30]
     non_object_mask = ~(np.isin(base_finger_frame[6], finger_ids + [object_id])).reshape(-1)
 
-    for finger_step, object_step in zip(finger_steps[50:70], object_steps[0:20]):
+    for finger_step, object_step in zip(finger_steps[40:50], object_steps[0:10]):
         finger_mask = np.isin(finger_step[6], finger_ids).reshape(-1)
         object_mask = (object_step[6] == object_id).reshape(-1)
 
@@ -1030,7 +1172,7 @@ def deform_scene_combined(xyz, features_dc, features_extra, opacities, scales, r
     base_finger_frame_30 = xyz_merged, opacities_merged, scales_merged, fextra_merged, rots_merged, fdc_merged, sem_merged
     non_object_mask_final = (base_finger_frame_30[6] != object_id).reshape(-1)
 
-    for step in range(20, len(object_steps)):
+    for step in range(10, len(object_steps)):
         object_step = object_steps[step]
         object_mask = (object_step[6] == object_id).reshape(-1)
 

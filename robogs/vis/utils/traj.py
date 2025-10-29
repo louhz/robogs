@@ -79,6 +79,36 @@ def generate_spiral_path(
     return render_poses
 
 
+def generate_360_path(camtoworlds1, camtoworlds2, n_poses=30):
+    center = (camtoworlds1[:3, 3] + camtoworlds2[:3, 3]) / 2
+    radius = np.linalg.norm(camtoworlds1[:3, 3] - center)
+    height = center[2]
+
+    start_angle = -np.pi / 4
+    end_angle = start_angle + 2 * np.pi
+
+    avg_up = normalize((camtoworlds1[:3, 1] + camtoworlds2[:3, 1]) / 2)
+
+    camtoworlds_all = []
+
+    for angle in np.linspace(start_angle, end_angle, n_poses):
+        cam_x = center[0] + radius * np.cos(angle)
+        cam_y = center[1] + radius * np.sin(angle)
+        cam_z = height
+
+        position = np.array([cam_x, cam_y, cam_z])
+
+        lookdir = center - position
+
+        camtoworld = viewmatrix(lookdir, avg_up, position)
+
+        camtoworlds_all.append(camtoworld)
+
+    return np.stack(camtoworlds_all)
+
+
+
+
 def generate_ellipse_path_z(
     poses: np.ndarray,
     n_frames: int = 120,
@@ -133,6 +163,50 @@ def generate_ellipse_path_z(
     positions = positions[:-1]
 
     # Set path's up vector to axis closest to average of input pose up vectors.
+    avg_up = poses[:, :3, 1].mean(0)
+    avg_up = avg_up / np.linalg.norm(avg_up)
+    ind_up = np.argmax(np.abs(avg_up))
+    up = np.eye(3)[ind_up] * np.sign(avg_up[ind_up])
+
+    return np.stack([viewmatrix(center - p, up, p) for p in positions])
+
+
+def generate_ellipse_path_x(
+    poses: np.ndarray,
+    n_frames: int = 120,
+    variation: float = 0.0,
+    phase: float = 0.0,
+    height: float = 0.0,
+) -> np.ndarray:
+    center = poses[:, :3, 3].mean(axis=0)
+    offset = np.array([height, center[1], center[2]])
+
+    sc = np.percentile(np.abs(poses[:, :3, 3] - offset), 90, axis=0)
+    low = -sc + offset
+    high = sc + offset
+
+    x_low = np.percentile(poses[:, :3, 3], 10, axis=0)
+    x_high = np.percentile(poses[:, :3, 3], 90, axis=0)
+
+    def get_positions(theta):
+        return np.stack(
+            [
+                variation
+                * (
+                    x_low[0]
+                    + (x_high - x_low)[0]
+                    * (np.cos(theta + 2 * np.pi * phase) * 0.5 + 0.5)
+                )
+                + height,
+                low[1] + (high - low)[1] * (np.cos(theta) * 0.5 + 0.5),
+                low[2] + (high - low)[2] * (np.sin(theta) * 0.5 + 0.5),
+            ],
+            -1,
+        )
+
+    theta = np.linspace(0, 2.0 * np.pi, n_frames + 1, endpoint=True)
+    positions = get_positions(theta)[:-1]
+
     avg_up = poses[:, :3, 1].mean(0)
     avg_up = avg_up / np.linalg.norm(avg_up)
     ind_up = np.argmax(np.abs(avg_up))

@@ -31,6 +31,9 @@ from vis.utils.traj import (
     generate_interpolated_path,
     generate_ellipse_path_z,
     generate_spiral_path,
+    generate_360_path,
+    generate_ellipse_path_y,
+    generate_ellipse_path_x
 )
 from torch import Tensor
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -792,11 +795,19 @@ class Runner:
 
 
     @torch.no_grad()
-    def eval(self, step: int, stage: str = "val", ply_file: str = None):
+    def eval(self, step: int, stage: str = "val", ply_file: str = None, outpath: str = None):
         """Entry for evaluation."""
         print("Running evaluation...")
         cfg = self.cfg
         device = self.device
+
+        if outpath is None:
+            raise ValueError("outpath parameter cannot be None")
+
+        if os.path.exists(outpath):
+            warnings.warn(f"Output path '{outpath}' already exists. Files may be overwritten.")
+        else:
+            os.makedirs(outpath)
 
         trainloader = torch.utils.data.DataLoader(
             self.trainset, batch_size=1, shuffle=False, num_workers=1
@@ -816,8 +827,13 @@ class Runner:
             [0.0000, 0.0000, 0.0000, 1.0000]]], device='cuda:0'
         )
 
+        camtoworlds3 = torch.tensor(            [[[-0.0473,  0.6528, -0.7560,  1.9752],
+            [ 0.1960, -0.7361, -0.6479,  1.1878],
+            [-0.9795, -0.1788, -0.0932,  0.0921],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]]], device='cuda:0')
+
         data = trainloader.dataset[0]
-        camtoworlds = camtoworlds2
+        camtoworlds = camtoworlds3
 
         Ks = data["K"].to(device).view(1, 3, 3)
         pixels = data["image"].to(device) / 255.0
@@ -833,17 +849,19 @@ class Runner:
         xyz, features_dc, features_extra, opacities, scales, rots, semantic_id = load_ply_sam(ply_file)
 
         stages = [
-            ("deform_arm", deform_arm),
+            # ("deform_arm", deform_arm),
             ("deform_hand_object", deform_scene_combined),
         ]
-
+        idx=0
         for stage, deform_func in stages:
             for step, (xyz_out, opacities_out, scales_out, fextra_out, rots_out, fdc_out, sem_out) in enumerate(
                 deform_func(xyz, features_dc, features_extra, opacities, scales, rots, semantic_id)
             ):
                 self.render_step(
                     xyz_out, rots_out, scales_out, opacities_out, fdc_out,
-                    fextra_out, device, camtoworlds, Ks, width, height, masks, cfg, stage, step
+                    fextra_out, device, camtoworlds, Ks, width, height, masks, cfg, stage, step,
+                    frame=idx,
+                    out_path=outpath
                 )
 
     @torch.no_grad()
@@ -880,33 +898,243 @@ class Runner:
         )
 
 
+        # cfg.render_traj_path = "ellipse"
+        # # Select trajectory generation mode
+        # if cfg.render_traj_path == "interp":
+        #     camtoworlds_all = generate_interpolated_path(
+        #         np.concatenate([camtoworlds1.cpu().numpy(), camtoworlds2.cpu().numpy()], axis=0), n_interp=30
+        #     )  # [N, 3, 4]
 
-        # Select trajectory generation mode
-        if cfg.render_traj_path == "interp":
-            camtoworlds_all = generate_interpolated_path(
-                np.concatenate([camtoworlds1.cpu().numpy(), camtoworlds2.cpu().numpy()], axis=0), n_interp=30
-            )  # [N, 3, 4]
+        # elif cfg.render_traj_path == "ellipse":
+        #     height = (camtoworlds1[0, 2, 3].item() + camtoworlds2[0, 2, 3].item()) / 2
+        #     camtoworlds_all = generate_ellipse_path_x(
+        #         np.concatenate([camtoworlds1.cpu().numpy(), camtoworlds2.cpu().numpy()], axis=0), height=height
+        #     )  # [N, 3, 4]
 
-        elif cfg.render_traj_path == "ellipse":
-            height = (camtoworlds1[0, 2, 3].item() + camtoworlds2[0, 2, 3].item()) / 2
-            camtoworlds_all = generate_ellipse_path_z(
-                np.concatenate([camtoworlds1.cpu().numpy(), camtoworlds2.cpu().numpy()], axis=0), height=height, n_interp=30
-            )  # [N, 3, 4]
+        # elif cfg.render_traj_path == "spiral":
+        #     camtoworlds_all = generate_spiral_path(
+        #         np.concatenate([camtoworlds1.cpu().numpy(), camtoworlds2.cpu().numpy()], axis=0),
+        #         bounds=(self.parser.bounds * self.scene_scale),
+        #         spiral_scale_r=self.parser.extconf["spiral_radius_scale"],
+        #     )
+        # elif cfg.render_traj_path == "360":
 
-        elif cfg.render_traj_path == "spiral":
-            camtoworlds_all = generate_spiral_path(
-                np.concatenate([camtoworlds1.cpu().numpy(), camtoworlds2.cpu().numpy()], axis=0),
-                bounds=(self.parser.bounds * self.scene_scale).cpu().numpy(),
-                spiral_scale_r=self.parser.extconf["spiral_radius_scale"],
-                n_interp=30
-            )
-        else:
-            raise ValueError(f"Render trajectory type not supported: {cfg.render_traj_path}")
+        #     camtoworlds_all = generate_360_path(camtoworlds1.cpu().numpy(), camtoworlds2.cpu().numpy(), n_poses=30)
 
-        # Append [0, 0, 0, 1] to make it 4x4 homogeneous matrices
-        num_frames = camtoworlds_all.shape[0]
-        extra_row = np.tile(np.array([0, 0, 0, 1], dtype=np.float32), (num_frames, 1, 1))
-        camtoworlds_all = np.concatenate([camtoworlds_all, extra_row], axis=1)
+        # else:
+        #     raise ValueError(f"Render trajectory type not supported: {cfg.render_traj_path}")
+
+        # # Append [0, 0, 0, 1] to make it 4x4 homogeneous matrices
+        # num_frames = camtoworlds_all.shape[0]
+        # extra_row = np.tile(np.array([0, 0, 0, 1], dtype=np.float32), (num_frames, 1, 1))
+        # camtoworlds_all = np.concatenate([camtoworlds_all, extra_row], axis=1)
+
+        # camtoworlds_all = np.array([
+
+        #     [[-0.8583,     0.3175,    -0.4032,     1.2881],
+        #     [ 0.1889,    -0.5349,    -0.8236,     0.6618],
+        #     [-0.4771,    -0.7830,     0.3989,    -0.9646],
+        #     [ 0.0000,     0.0000,     0.0000,     1.0000]],
+
+        #     [[-0.7511,  0.6106, -0.2508,  1.0183],
+        #     [-0.4458, -0.7493, -0.4898,  0.9685],
+        #     [-0.4870, -0.2560,  0.8350, -1.1460],
+        #     [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+        #     [[-0.8619, -0.0139, -0.5070,  1.3026],
+        #     [ 0.1413, -0.9665, -0.2140,  0.4874],
+        #     [-0.4870, -0.2560,  0.8350, -0.9860],
+        #     [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+        #     [[-0.8619, -0.0139, -0.5070,  1.5026],
+        #     [ 0.1413, -0.9665, -0.2140,  0.6874],
+        #     [-0.4870, -0.2560,  0.8350, -1.3860],
+        #     [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+
+        #     [[-0.3442,  0.3883, -0.8548,  1.5266],
+        #     [ 0.3306, -0.8020, -0.4974,  1.4852],
+        #     [-0.8788, -0.4538,  0.1476,  0.1511],
+        #     [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+        #     [[-0.0473,  0.6528, -0.7560,  1.9352],
+        #     [ 0.1960, -0.7361, -0.6479,  1.4278],
+        #     [-0.9795, -0.1788, -0.0932,  0.4921],
+        #     [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+        #     [[-0.2436,  0.6874, -0.6842,  1.8653],
+        #     [ 0.2256, -0.6459, -0.7293,  1.2213],
+        #     [-0.9433, -0.3320,  0.0022,  0.4927],
+        #     [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+        #     [[ 0.4597,  0.5971, -0.6574,  1.7592],
+        #     [ 0.5569, -0.7704, -0.3103,  1.3194],
+        #     [-0.6918, -0.2235, -0.6866,  0.7731],
+        #     [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+        #     [[ 0.2053,  0.8768, -0.4348,  1.7892],
+        #     [ 0.5941, -0.4647, -0.6566,  1.6843],
+        #     [-0.7777, -0.1236, -0.6163,  0.9211],
+        #     [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+        #     [[ 0.3530,  0.7045, -0.6157,  2.0995],
+        #     [ 0.6081, -0.6729, -0.4213,  1.9781],
+        #     [-0.7111, -0.2257, -0.6659,  1.5261],
+        #     [ 0.0000,  0.0000,  0.0000,  1.0000]]
+        # ])
+
+
+        camtoworlds_all = np.array([
+            [[-0.7046,  0.5506, -0.4476,  1.7585],
+            [ 0.1688, -0.4826, -0.8594,  1.6100],
+            [-0.6892, -0.6811,  0.2471, -1.1348],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+            [[-0.4920,  0.6141, -0.6171,  1.7157],
+            [ 0.1032, -0.6627, -0.7418,  1.2324],
+            [-0.8645, -0.4286,  0.2626, -0.5961],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+            [[-0.3731,  0.6325, -0.6788,  1.2763],
+            [ 0.3412, -0.5868, -0.7343,  1.4565],
+            [-0.8628, -0.5056,  0.0031, -0.2607],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+            [[-0.3832,  0.7394, -0.5536,  1.5750],
+            [ 0.1648, -0.5350, -0.8286,  1.7061],
+            [-0.9089, -0.4087,  0.0831,  0.2483],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+            [[-0.3442,  0.3883, -0.8548,  1.5266],
+            [ 0.3306, -0.8020, -0.4974,  1.4852],
+            [-0.8788, -0.4538,  0.1476,  0.1511],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+            [[-0.0473,  0.6528, -0.7560,  1.9752],
+            [ 0.1960, -0.7361, -0.6479,  1.1878],
+            [-0.9795, -0.1788, -0.0932,  0.0921],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+            [[-0.2436,  0.6874, -0.6842,  1.8053],
+            [ 0.2256, -0.6459, -0.7293,  1.2213],
+            [-0.9433, -0.3320,  0.0022,  0.4927],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+            [[ 0.4597,  0.5971, -0.6574,  1.7592],
+            [ 0.5569, -0.7704, -0.3103,  1.3194],
+            [-0.6918, -0.2235, -0.6866,  0.7731],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+            [[ 0.2053,  0.8768, -0.4348,  1.7892],
+            [ 0.5941, -0.4647, -0.6566,  1.6843],
+            [-0.7777, -0.1236, -0.6163,  0.9211],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]],
+
+            [[ 0.3530,  0.7045, -0.6157,  2.0995],
+            [ 0.6081, -0.6729, -0.4213,  1.9781],
+            [-0.7111, -0.2257, -0.6659,  1.5261],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]]
+        ])
+
+    #     camtoworlds_all = np.array([[[-0.25571028,  0.77972345, -0.57152743,  1.31836274],
+    #     [ 0.39014636, -0.45767218, -0.79895056,  1.80452242],
+    #     [-0.88453269, -0.42727921, -0.18717478,  0.16107921],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.43921331,  0.67938284, -0.58781853,  1.43302102],
+    #     [ 0.14771713, -0.5907887 , -0.79318873,  1.7451265 ],
+    #     [-0.88615536, -0.43520992,  0.15912578, -0.04823827],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.49732169,  0.57743714, -0.64748551,  1.56980522],
+    #     [ 0.24878255, -0.62006064, -0.74406454,  1.77739776],
+    #     [-0.83113078, -0.53112253,  0.16471332,  0.20269549],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.51576104,  0.77329919, -0.3687803 ,  1.17929808],
+    #     [-0.12149379, -0.49211716, -0.86200926,  1.56573627],
+    #     [-0.84807417, -0.39978628,  0.34776591,  0.23541179],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.39897443,  0.6769695 , -0.61849147,  1.41568578],
+    #     [ 0.26745189, -0.55925966, -0.78466434,  1.81371357],
+    #     [-0.87709115, -0.47847772,  0.04207353,  0.32883805],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.38233272,  0.80622504, -0.45146746,  1.83579987],
+    #     [ 0.14866627, -0.42855152, -0.89120252,  1.69892993],
+    #     [-0.91198686, -0.40785387,  0.0439908 ,  0.18623443],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.262307  ,  0.8249378 , -0.50067221,  1.52788571],
+    #     [ 0.0254255 , -0.51275126, -0.85816064,  1.67087734],
+    #     [-0.96464946, -0.23783139,  0.11352379,  0.41782408],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.53967509,  0.74103498, -0.39952216,  1.50170509],
+    #     [ 0.17496906, -0.36547319, -0.91422928,  1.72596123],
+    #     [-0.82349051, -0.56329079,  0.06757858, -0.04091622],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.29614988,  0.74751285, -0.59457531,  1.9438858 ],
+    #     [ 0.06392605, -0.60559177, -0.79320368,  1.58412952],
+    #     [-0.95299985, -0.27291602,  0.13156038,  0.11324861],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.19208169,  0.82542507, -0.53082774,  1.44000863],
+    #     [-0.07177363, -0.55126692, -0.83123602,  1.54734538],
+    #     [-0.97875082, -0.12156579,  0.16513203,  0.19125809],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.26305695,  0.83521732, -0.4829214 ,  1.71218698],
+    #     [ 0.02323765, -0.49492033, -0.86862759,  1.71445462],
+    #     [-0.96450042, -0.23972048,  0.11078374,  0.03446797],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.41836549,  0.62174253, -0.66212276,  1.63024203],
+    #     [ 0.21615332, -0.63988853, -0.7374418 ,  1.79517034],
+    #     [-0.88218369, -0.45164023,  0.13331556,  0.48276494],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.25165108,  0.88500301, -0.39171599,  1.64485462],
+    #     [ 0.14614766, -0.36535059, -0.91932573,  1.80019122],
+    #     [-0.95671971, -0.28859769, -0.03740025,  0.57048758],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.47197387,  0.62002987, -0.62674048,  1.66820608],
+    #     [ 0.25225014, -0.58620714, -0.76989029,  1.93897406],
+    #     [-0.84475472, -0.52146347,  0.12027183,  0.26158314],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.26323427,  0.82613149, -0.49821128,  1.55663574],
+    #     [ 0.26892283, -0.4331192 , -0.86028383,  1.72765158],
+    #     [-0.92649243, -0.36043658, -0.1081538 ,  0.37506483],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.3595042 ,  0.74950878, -0.55587167,  1.15730131],
+    #     [ 0.11370529, -0.55607344, -0.82331855,  1.92400556],
+    #     [-0.92618996, -0.35919203,  0.11468762,  0.44121812],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.28145965,  0.8676621 , -0.40980843,  1.69256686],
+    #     [ 0.25246314, -0.34506841, -0.90398571,  1.76111806],
+    #     [-0.92576608, -0.35789702, -0.12192986,  0.4944598 ],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.28661045,  0.76399082, -0.57807653,  1.4496942 ],
+    #     [ 0.2883756 , -0.50661075, -0.81251773,  1.93580344],
+    #     [-0.91361587, -0.39957924, -0.07511638,  0.36642564],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.23171623,  0.78637993, -0.57263792,  1.60185292],
+    #     [-0.10039689, -0.60484779, -0.7899871 ,  1.46058811],
+    #     [-0.96758878, -0.12556176,  0.21910315,  0.17082856],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]],
+
+    #    [[-0.25238779,  0.89429063, -0.36951952,  1.48528549],
+    #     [ 0.13741901, -0.34488513, -0.92853124,  1.81465876],
+    #     [-0.95781857, -0.28512895, -0.03584774,  0.06122255],
+    #     [ 0.        ,  0.        ,  0.        ,  1.        ]]])
 
         camtoworlds_all = torch.from_numpy(camtoworlds_all).float().to(device)
 
@@ -940,7 +1168,76 @@ class Runner:
             )
 
 
+    @torch.no_grad()
+    def render_foreground(self, step: int, stage: str = "val", ply_file: str = None, outpath: str = None):
+        """Entry for evaluation."""
+        print("Running evaluation...")
+        cfg = self.cfg
+        device = self.device
 
+        if outpath is None:
+            raise ValueError("outpath parameter cannot be None")
+
+        if os.path.exists(outpath):
+            warnings.warn(f"Output path '{outpath}' already exists. Files may be overwritten.")
+        else:
+            os.makedirs(outpath)
+
+        trainloader = torch.utils.data.DataLoader(
+            self.trainset, batch_size=1, shuffle=False, num_workers=1
+        )
+
+        camtoworlds1 = torch.tensor(
+            [[[-0.6800, 0.4781, -0.5559, 1.8009],
+            [0.1233, -0.6728, -0.7295, 1.4379],
+            [-0.7228, -0.5646, 0.3985, -0.9330],
+            [0.0000, 0.0000, 0.0000, 1.0000]]], device='cuda:0'
+        )
+
+        camtoworlds2 = torch.tensor(
+            [[[0.3487, 0.7220, -0.5976, 1.8779],
+            [0.5092, -0.6813, -0.5259, 1.4589],
+            [-0.7869, -0.1209, -0.6052, 1.3671],
+            [0.0000, 0.0000, 0.0000, 1.0000]]], device='cuda:0'
+        )
+
+        camtoworlds3 = torch.tensor([
+            [[-0.4920,  0.6141, -0.6171,  2.457],
+            [ 0.1032, -0.6627, -0.7418,  2.324],
+            [-0.8645, -0.4286,  0.2626, -0.5961],
+            [ 0.0000,  0.0000,  0.0000,  1.0000]],], device='cuda:0')
+
+        data = trainloader.dataset[0]
+        camtoworlds = camtoworlds3
+
+        Ks = data["K"].to(device).view(1, 3, 3)
+        pixels = data["image"].to(device) / 255.0
+        pixels = pixels.view(1, pixels.shape[0], pixels.shape[1], 3)
+        masks = data.get("mask", None)
+        if masks is not None:
+            masks = masks.to(device)
+
+        height, width = pixels.shape[1:3]
+
+        torch.cuda.synchronize()
+
+        xyz, features_dc, features_extra, opacities, scales, rots, semantic_id = load_ply_sam(ply_file)
+
+        stages = [
+            # ("deform_arm", deform_arm),
+            ("deform_hand_object", deform_scene_combined),
+        ]
+        idx=0
+        for stage, deform_func in stages:
+            for step, (xyz_out, opacities_out, scales_out, fextra_out, rots_out, fdc_out, sem_out) in enumerate(
+                deform_func(xyz, features_dc, features_extra, opacities, scales, rots, semantic_id)
+            ):
+                self.render_step(
+                    xyz_out, rots_out, scales_out, opacities_out, fdc_out,
+                    fextra_out, device, camtoworlds, Ks, width, height, masks, cfg, stage, step,
+                    frame=idx,
+                    out_path=outpath
+                )
     @torch.no_grad()
     def exportdeform(self, step: int, stage: str = "val",ply_file: str = None):
         """Entry for evaluation."""
